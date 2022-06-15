@@ -5,9 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  label:
-    types:
-      - created
+    types: [ labeled ]
 
 jobs:
   label_check:
