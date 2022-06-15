@@ -7,8 +7,14 @@ on:
     branches: [ main ]
 
 jobs:
+  label_check:
+    if: ${{ github.event.label.name != 'ok-to-test' }}
+    uses: actions/github-script@v3
+    with:
+      script: |
+          core.setFailed('missing ok-to-test label')
   unit_tests:
-    if: ${{ github.event.label.name == 'ok-to-test' }}
+    if: success()
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
