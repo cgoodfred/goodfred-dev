@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: labels
-      if: ${{ github.event.label.name != 'ok-to-test' }}
+      if: contains(github.event.pull_request.labels.*.name, ok-to-test)
       uses: actions/github-script@v3
       with:
         script: |
