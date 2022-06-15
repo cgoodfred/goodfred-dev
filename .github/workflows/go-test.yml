@@ -5,7 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-    types: [ labeled ]
+    types: [opened, labeled, ready_for_review, synchronize]
 
 jobs:
   label_check:
