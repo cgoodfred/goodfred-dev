@@ -16,7 +16,7 @@ jobs:
       uses: actions/github-script@v3
       with:
         script: |
-            core.setFailed('missing ok-to-test label')
+            core.setFailed(github.event.pull_request.labels.*.name)
 
   unit_tests:
     needs: label_check
