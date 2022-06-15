@@ -7,21 +7,16 @@ on:
     branches: [ main ]
     types: [opened, labeled, ready_for_review, synchronize]
 
-jobs:
-  label_check:
+  unit_tests:
     runs-on: ubuntu-latest
     steps:
     - name: check-labels
-      if: "!contains(github.event.pull_request.labels.*.name, 'ok-to-test')"
+      if: github.event_name == 'pull_request' && "!contains(github.event.pull_request.labels.*.name, 'ok-to-test')"
       uses: actions/github-script@v3
       with:
         script: |
             core.setFailed('missing ok-to-test label')
 
-  unit_tests:
-    needs: label_check
-    runs-on: ubuntu-latest
-    steps:
     - name: Checkout
       uses: actions/checkout@v3
 
