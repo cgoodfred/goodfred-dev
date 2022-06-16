@@ -12,13 +12,13 @@ func main() {
 	r.HandleFunc("/", HomeHandler)
 	r.HandleFunc("/status", StatusHandler)
 
-	log.Fatal(http.ListenAndServe("localhost:8080", r))
+	log.Fatal(http.ListenAndServe(":8080", r))
 
 }
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Hello World"))
+	w.Write([]byte("Hello World\n"))
 }
 
 func StatusHandler(w http.ResponseWriter, r *http.Request) {
