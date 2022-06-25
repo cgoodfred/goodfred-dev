@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+  goodfred-dev-server:
+    container_name: goodfred-dev-server
+    image: goodfred-dev-server
+    build:
+      context: .
+    environment:
+      - PGSQL_PORT=5432
+      - PGSQL_HOSTNAME=sensor-db
+      - DEBUG=false
+    ports:
+      - 8080:8080
+
+
+  db:
+    container_name: sensor-db
+    image: postgres:14
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    privileged: true
+    ports:
+      - 15432:5432
+    volumes:
+      - ./tmp/db:/var/lib/postgresql/data
+    command:
+      - postgres
+      - -c
+      - log_statement=all
