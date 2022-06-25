@@ -7,8 +7,8 @@ services:
     build:
       context: .
     environment:
-      - PGSQL_PORT=5432
-      - PGSQL_HOSTNAME=sensor-db
+      - DB_PORT=5432
+      - DB_HOST=sensor-db
       - DEBUG=false
     ports:
       - 8080:8080

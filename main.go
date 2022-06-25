@@ -1,27 +1,12 @@
 package main
 
 import (
-	"log"
-	"net/http"
-
-	"github.com/gorilla/mux"
+	"github.com/spf13/viper"
 )
 
 func main() {
-	r := mux.NewRouter()
-	r.HandleFunc("/", HomeHandler)
-	r.HandleFunc("/status", StatusHandler)
-
-	log.Fatal(http.ListenAndServe(":8080", r))
-
-}
-
-func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Hello World\n"))
-}
-
-func StatusHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Available"))
+	viper.AutomaticEnv()
+	a := App{}
+	a.Initialize()
+	a.Run()
 }
