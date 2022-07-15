@@ -27,7 +27,7 @@ func TestGetSensorReadingSuccess(t *testing.T) {
 		SID: testSensorID,
 	}
 
-	if err = s.getSensorReading(db); err != nil {
+	if err = s.getReading(db); err != nil {
 		t.Errorf("Unexpected error during delete: %s", err)
 	}
 
@@ -55,7 +55,7 @@ func TestDeleteSensorReading(t *testing.T) {
 		SID: testSensorID,
 	}
 
-	if err = s.deleteSensorReading(db); err != nil {
+	if err = s.deleteReading(db); err != nil {
 		t.Errorf("Unexpected error during delete: %s", err)
 	}
 
@@ -83,7 +83,7 @@ func TestCreateSensorReading(t *testing.T) {
 		Weight: testWeight,
 	}
 
-	if err = s.createSensorReading(db); err != nil {
+	if err = s.createReading(db); err != nil {
 		t.Errorf("Unexpected error during create: %s", err)
 	}
 

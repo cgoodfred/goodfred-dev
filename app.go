@@ -20,7 +20,7 @@ type App struct {
 }
 
 func (a *App) Initialize() {
-	connectionString := db_config()
+	connectionString := getDBConfig()
 
 	var err error
 	a.DB, err = sql.Open("postgres", connectionString)
@@ -36,7 +36,7 @@ func (a *App) Run() {
 	log.Fatal(http.ListenAndServe(":8080", a.Router))
 }
 
-func db_config() string {
+func getDBConfig() string {
 	viper.SetDefault("DB_USER", "postgres")
 	viper.SetDefault("DB_PASSWORD", "postgres")
 	viper.SetDefault("DB_HOST", "localhost")
@@ -78,7 +78,7 @@ func (a *App) getSensorReading(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s := sensorReading{SID: id}
-	if err := s.getSensorReading(a.DB); err != nil {
+	if err := s.getReading(a.DB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
 			respondWithError(w, http.StatusNotFound, fmt.Sprintf("No records found for sensor_id: %d", id))
@@ -104,7 +104,7 @@ func (a *App) createSensorReading(w http.ResponseWriter, r *http.Request) {
 		s.Time = time.Now().UTC()
 	}
 	defer r.Body.Close()
-	if err := s.createSensorReading(a.DB); err != nil {
+	if err := s.createReading(a.DB); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -121,7 +121,7 @@ func (a *App) deleteSensorReading(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s := sensorReading{SID: id}
-	if err := s.deleteSensorReading(a.DB); err != nil {
+	if err := s.deleteReading(a.DB); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
