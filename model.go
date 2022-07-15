@@ -16,6 +16,29 @@ func (s *sensorReading) getReading(db *sql.DB) error {
 		s.SID).Scan(&s.Time, &s.Weight)
 }
 
+func (s *sensorReading) getLastTenReadings(db *sql.DB) ([]sensorReading, error) {
+	sensorReadings := []sensorReading{}
+	rows, err := db.Query("SELECT sensor_id, record_time, weight FROM sensor_reading WHERE sensor_id=$1 ORDER BY record_time DESC LIMIT 10", s.SID)
+	defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var sens sensorReading
+		if err := rows.Scan(&sens.SID, &sens.Time, &sens.Weight); err != nil {
+			return sensorReadings, err
+		}
+		sensorReadings = append(sensorReadings, sens)
+	}
+	if err = rows.Err(); err != nil {
+		return sensorReadings, err
+	}
+	return sensorReadings, nil
+	// return db.QueryRow("SELECT record_time, weight FROM sensor_reading WHERE sensor_id=$1 ORDER BY record_time DESC",
+	// 	s.SID).Scan(&s.Time, &s.Weight)
+}
+
 func (s *sensorReading) deleteReading(db *sql.DB) error {
 	_, err := db.Exec("DELETE FROM sensor_reading WHERE sensor_id=$1", s.SID)
 

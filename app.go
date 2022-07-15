@@ -53,7 +53,7 @@ func getDBConfig() string {
 
 func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/sensor", a.createSensorReading).Methods("POST")
-	a.Router.HandleFunc("/sensor/{id:[0-9]+}", a.getSensorReading).Methods("GET")
+	a.Router.HandleFunc("/sensor/{id:[0-9]+}", a.getSensorReadings).Methods("GET")
 	a.Router.HandleFunc("/sensor/{id:[0-9]+}", a.deleteSensorReading).Methods("DELETE")
 }
 
@@ -89,6 +89,29 @@ func (a *App) getSensorReading(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, s)
+}
+
+func (a *App) getSensorReadings(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid sensor ID")
+		return
+	}
+
+	s := sensorReading{SID: id}
+	readings, err := s.getLastTenReadings(a.DB)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			respondWithError(w, http.StatusNotFound, fmt.Sprintf("No records found for sensor_id: %d", id))
+		default:
+			respondWithError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, readings)
 }
 
 func (a *App) createSensorReading(w http.ResponseWriter, r *http.Request) {
