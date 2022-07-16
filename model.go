@@ -11,6 +11,13 @@ type sensorReading struct {
 	Weight float64   `json:"weight"`
 }
 
+type sensor struct {
+	SID        int     `json:"sensor_id"`
+	SensorName string  `json:"sensor_name"`
+	Threshold  float32 `json:"threshold_percent"`
+	FullWeight float32 `json:"full_weight"`
+}
+
 func (s *sensorReading) getReading(db *sql.DB) error {
 	return db.QueryRow("SELECT record_time, weight FROM sensor_reading WHERE sensor_id=$1 ORDER BY record_time DESC",
 		s.SID).Scan(&s.Time, &s.Weight)
@@ -49,4 +56,11 @@ func (s *sensorReading) createReading(db *sql.DB) error {
 	_, err := db.Exec("INSERT INTO sensor_reading(sensor_id, record_time, weight) VALUES($1, $2, $3) RETURNING id", s.SID, s.Time, s.Weight)
 
 	return err
+}
+
+func (s *sensor) createSensor(db *sql.DB) error {
+	if err := db.QueryRow("INSERT INTO sensor(sensor_name, full_weight, threshold) VALUES($1, $2, $3) RETURNING sensor_id", s.SensorName, s.FullWeight, s.Threshold).Scan(&s.SID); err != nil {
+		return err
+	}
+	return nil
 }
