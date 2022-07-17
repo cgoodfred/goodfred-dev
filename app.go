@@ -52,9 +52,13 @@ func getDBConfig() string {
 }
 
 func (a *App) initializeRoutes() {
-	a.Router.HandleFunc("/sensor", a.createSensorReading).Methods("POST")
-	a.Router.HandleFunc("/sensor/{id:[0-9]+}", a.getSensorReadings).Methods("GET")
-	a.Router.HandleFunc("/sensor/{id:[0-9]+}", a.deleteSensorReading).Methods("DELETE")
+	a.Router.HandleFunc("/sensors", a.createSensor).Methods("POST")
+	a.Router.HandleFunc("/sensors", a.getSensors).Methods("GET")
+	a.Router.HandleFunc("/sensors/{id:[0-9]+}", a.getSensor).Methods("GET")
+	a.Router.HandleFunc("/sensors/{id:[0-9]+}", a.deleteSensor).Methods("DELETE")
+	a.Router.HandleFunc("/sensors/{id:[0-9]+}", a.createSensorReading).Methods("POST")
+	a.Router.HandleFunc("/sensors/{id:[0-9]+}/readings", a.getSensorReadings).Methods("GET")
+	a.Router.HandleFunc("/sensors/{id:[0-9]+}/readings", a.deleteSensorReading).Methods("DELETE")
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {
@@ -69,27 +73,27 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Write(response)
 }
 
-func (a *App) getSensorReading(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid sensor ID")
-		return
-	}
+// func (a *App) getSensorReading(w http.ResponseWriter, r *http.Request) {
+// 	vars := mux.Vars(r)
+// 	id, err := strconv.Atoi(vars["id"])
+// 	if err != nil {
+// 		respondWithError(w, http.StatusBadRequest, "Invalid sensor ID")
+// 		return
+// 	}
 
-	s := sensorReading{SID: id}
-	if err := s.getReading(a.DB); err != nil {
-		switch err {
-		case sql.ErrNoRows:
-			respondWithError(w, http.StatusNotFound, fmt.Sprintf("No records found for sensor_id: %d", id))
-		default:
-			respondWithError(w, http.StatusInternalServerError, err.Error())
-		}
-		return
-	}
+// 	s := sensorReading{SID: id}
+// 	if err := s.getReading(a.DB); err != nil {
+// 		switch err {
+// 		case sql.ErrNoRows:
+// 			respondWithError(w, http.StatusNotFound, fmt.Sprintf("No records found for sensor_id: %d", id))
+// 		default:
+// 			respondWithError(w, http.StatusInternalServerError, err.Error())
+// 		}
+// 		return
+// 	}
 
-	respondWithJSON(w, http.StatusOK, s)
-}
+// 	respondWithJSON(w, http.StatusOK, s)
+// }
 
 func (a *App) getSensorReadings(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -116,7 +120,14 @@ func (a *App) getSensorReadings(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) createSensorReading(w http.ResponseWriter, r *http.Request) {
 
-	var s sensorReading
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid sensor ID")
+		return
+	}
+
+	s := sensorReading{SID: id}
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&s); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
@@ -150,4 +161,77 @@ func (a *App) deleteSensorReading(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
+}
+
+func (a *App) createSensor(w http.ResponseWriter, r *http.Request) {
+
+	var s sensor
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&s); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	defer r.Body.Close()
+	if err := s.createSensor(a.DB); err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusCreated, s)
+}
+
+func (a *App) deleteSensor(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid Sensor ID")
+		return
+	}
+
+	s := sensor{SID: id}
+	if err := s.deleteSensor(a.DB); err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusCreated, s)
+}
+
+func (a *App) getSensor(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid sensor ID")
+		return
+	}
+
+	s := sensor{SID: id}
+	if err := s.getSensor(a.DB); err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			respondWithError(w, http.StatusNotFound, fmt.Sprintf("No records found for sensor_id: %d", id))
+		default:
+			respondWithError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, s)
+}
+
+func (a *App) getSensors(w http.ResponseWriter, r *http.Request) {
+	s := sensor{}
+	sensors, err := s.getSensors(a.DB)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			respondWithError(w, http.StatusNotFound, "No sensors found")
+		default:
+			respondWithError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, sensors)
 }
