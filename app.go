@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -12,28 +11,48 @@ import (
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 type App struct {
 	Router *mux.Router
 	DB     *sql.DB
+	Logger *zap.SugaredLogger
+}
+
+type loggingResponseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func NewLoggingResponseWriter(w http.ResponseWriter) *loggingResponseWriter {
+	return &loggingResponseWriter{w, http.StatusOK}
+}
+
+func (lrw *loggingResponseWriter) WriteHeader(code int) {
+	lrw.statusCode = code
+	lrw.ResponseWriter.WriteHeader(code)
 }
 
 func (a *App) Initialize() {
+	a.Logger = a.initializeLogger()
+
 	connectionString := getDBConfig()
 
 	var err error
 	a.DB, err = sql.Open("postgres", connectionString)
 	if err != nil {
-		log.Fatal(err)
+		a.Logger.Fatal(err)
 	}
-	a.Router = mux.NewRouter()
 
+	a.Router = mux.NewRouter()
 	a.initializeRoutes()
+	a.Router.Use(a.loggingMiddleware)
+	a.Logger.Info("initialization successful")
 }
 
 func (a *App) Run() {
-	log.Fatal(http.ListenAndServe(":8080", a.Router))
+	a.Logger.Fatal(http.ListenAndServe(":8080", a.Router))
 }
 
 func getDBConfig() string {
@@ -62,6 +81,26 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/sensors/{id:[0-9]+}/readings", a.deleteSensorReading).Methods("DELETE")
 }
 
+func (a *App) initializeLogger() *zap.SugaredLogger {
+	logger, _ := zap.NewProduction()
+	defer logger.Sync() // flushes buffer, if any
+	sugar := logger.Sugar()
+	return sugar
+}
+
+func (a *App) loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		lrw := NewLoggingResponseWriter(w)
+		a.Logger.Infow("API request", "Endpoint", r.RequestURI)
+
+		startTime := time.Now()
+		next.ServeHTTP(lrw, r)
+		endTime := time.Now()
+		a.Logger.Infow("API response", "Duration", endTime.Sub(startTime).String(), "StatusCode", lrw.statusCode)
+	})
+}
+
 func respondWithError(w http.ResponseWriter, code int, message string) {
 	respondWithJSON(w, code, map[string]string{"error": message})
 }
@@ -73,28 +112,6 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.WriteHeader(code)
 	w.Write(response)
 }
-
-// func (a *App) getSensorReading(w http.ResponseWriter, r *http.Request) {
-// 	vars := mux.Vars(r)
-// 	id, err := strconv.Atoi(vars["id"])
-// 	if err != nil {
-// 		respondWithError(w, http.StatusBadRequest, "Invalid sensor ID")
-// 		return
-// 	}
-
-// 	s := sensorReading{SID: id}
-// 	if err := s.getReading(a.DB); err != nil {
-// 		switch err {
-// 		case sql.ErrNoRows:
-// 			respondWithError(w, http.StatusNotFound, fmt.Sprintf("No records found for sensor_id: %d", id))
-// 		default:
-// 			respondWithError(w, http.StatusInternalServerError, err.Error())
-// 		}
-// 		return
-// 	}
-
-// 	respondWithJSON(w, http.StatusOK, s)
-// }
 
 func (a *App) getSensorReadings(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
