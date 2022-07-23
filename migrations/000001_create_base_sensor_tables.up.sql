@@ -8,6 +8,6 @@ CREATE TABLE IF NOT EXISTS sensor (
 
 CREATE TABLE IF NOT EXISTS sensor_reading (
     sensor_id bigserial REFERENCES sensor (sensor_id) ON DELETE CASCADE,
-    record_time timestamp without time zone default (now() at time zone 'utc'),
+    record_time timestamptz default (now() at time zone 'utc'),
     weight real NOT NULL
 );

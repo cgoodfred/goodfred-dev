@@ -73,9 +73,10 @@ func TestCreateSensorReading(t *testing.T) {
 
 	testSensorID := 5
 	testWeight := 6.75
-
+	testTime := time.Now().UTC().Round(time.Hour)
 	// Both expected and sensor time are rounded to the hour for simplicity
-	mock.ExpectExec("INSERT INTO sensor_reading").WithArgs(testSensorID, time.Now().UTC().Round(time.Hour), testWeight).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("INSERT INTO sensor_reading").WithArgs(testSensorID, testTime, testWeight).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("UPDATE sensor").WithArgs(testWeight, testTime, testSensorID).WillReturnResult(sqlmock.NewResult(1, 1))
 
 	s := sensorReading{
 		SID:    testSensorID,
