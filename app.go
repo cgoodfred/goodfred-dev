@@ -54,6 +54,7 @@ func getDBConfig() string {
 func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/sensors", a.createSensor).Methods("POST")
 	a.Router.HandleFunc("/sensors", a.getSensors).Methods("GET")
+	a.Router.HandleFunc("/sensors/underweight", a.getUnderweightSensors).Methods("GET")
 	a.Router.HandleFunc("/sensors/{id:[0-9]+}", a.getSensor).Methods("GET")
 	a.Router.HandleFunc("/sensors/{id:[0-9]+}", a.deleteSensor).Methods("DELETE")
 	a.Router.HandleFunc("/sensors/{id:[0-9]+}", a.createSensorReading).Methods("POST")
@@ -234,4 +235,26 @@ func (a *App) getSensors(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, sensors)
+}
+
+func (a *App) getUnderweightSensors(w http.ResponseWriter, r *http.Request) {
+	s := sensor{}
+	sensors, err := s.getSensors(a.DB)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			respondWithError(w, http.StatusNotFound, "No sensors found")
+		default:
+			respondWithError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+	underweight := []sensor{}
+	for _, sens := range sensors {
+		if sens.IsUnderweight {
+			underweight = append(underweight, sens)
+		}
+	}
+
+	respondWithJSON(w, http.StatusOK, underweight)
 }
