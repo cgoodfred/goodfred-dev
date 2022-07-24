@@ -80,7 +80,7 @@ func (s *sensor) getSensor(db *sql.DB) error {
 
 func (s *sensor) getSensors(db *sql.DB) ([]sensor, error) {
 	sensors := []sensor{}
-	rows, err := db.Query("SELECT sensor_id, sensor_name, full_weight, underweight_percent, is_underweight, last_reading_time, last_reading_weight FROM sensor")
+	rows, err := db.Query("SELECT sensor_id, sensor_name, full_weight, underweight_percent, is_underweight, last_reading_time, last_reading_weight FROM sensor ORDER BY sensor_id")
 
 	defer rows.Close()
 	if err != nil {

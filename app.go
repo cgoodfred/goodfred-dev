@@ -8,6 +8,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/github"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
@@ -44,6 +48,13 @@ func (a *App) Initialize() {
 	if err != nil {
 		a.Logger.Fatal(err)
 	}
+
+	driver, err := postgres.WithInstance(a.DB, &postgres.Config{})
+	m, err := migrate.NewWithDatabaseInstance("github://cgoodfred/goodfred-dev/migrations", "postgres", driver)
+	if err != nil {
+		a.Logger.Error(err)
+	}
+	m.Up()
 
 	a.Router = mux.NewRouter()
 	a.initializeRoutes()

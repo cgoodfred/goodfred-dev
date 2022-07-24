@@ -20,6 +20,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=sensor
     privileged: true
     ports:
       - 15432:5432
