@@ -50,7 +50,6 @@ func (a *App) Initialize() {
 	}
 
 	driver, err := postgres.WithInstance(a.DB, &postgres.Config{})
-	// m, err := migrate.New("github://cgoodfred/goodfred-dev/migrations", connectionString)
 	m, err := migrate.NewWithDatabaseInstance("github://cgoodfred/goodfred-dev/migrations", "postgres", driver)
 	if err != nil {
 		a.Logger.Error(err)
