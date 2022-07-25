@@ -86,10 +86,10 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/sensors", a.getSensors).Methods("GET")
 	a.Router.HandleFunc("/sensors/underweight", a.getUnderweightSensors).Methods("GET")
 	a.Router.HandleFunc("/sensors/{id:[0-9]+}", a.getSensor).Methods("GET")
-	a.Router.HandleFunc("/sensors/{id:[0-9]+}", a.deleteSensor).Methods("DELETE")
+	// a.Router.HandleFunc("/sensors/{id:[0-9]+}", a.deleteSensor).Methods("DELETE")
 	a.Router.HandleFunc("/sensors/{id:[0-9]+}", a.createSensorReading).Methods("POST")
 	a.Router.HandleFunc("/sensors/{id:[0-9]+}/readings", a.getSensorReadings).Methods("GET")
-	a.Router.HandleFunc("/sensors/{id:[0-9]+}/readings", a.deleteSensorReading).Methods("DELETE")
+	// a.Router.HandleFunc("/sensors/{id:[0-9]+}/readings", a.deleteSensorReading).Methods("DELETE")
 }
 
 func (a *App) initializeLogger() *zap.SugaredLogger {
