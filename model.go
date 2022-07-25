@@ -21,12 +21,17 @@ type sensor struct {
 	LastReadingTime time.Time `json:"last_reading_time"`
 }
 
+type sensorResponse struct {
+	Sensor   sensor          `json:"sensor"`
+	Readings []sensorReading `json:"sensor_readings"`
+}
+
 func (s *sensorReading) getReading(db *sql.DB) error {
 	return db.QueryRow("SELECT record_time, weight FROM sensor_reading WHERE sensor_id=$1 ORDER BY record_time DESC",
 		s.SID).Scan(&s.Time, &s.Weight)
 }
 
-func (s *sensorReading) getLastTenReadings(db *sql.DB) ([]sensorReading, error) {
+func (s *sensor) getLastTenReadings(db *sql.DB) ([]sensorReading, error) {
 	sensorReadings := []sensorReading{}
 	rows, err := db.Query("SELECT sensor_id, record_time, weight FROM sensor_reading WHERE sensor_id=$1 ORDER BY record_time DESC LIMIT 10", s.SID)
 	defer rows.Close()
