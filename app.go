@@ -12,6 +12,7 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/github"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
@@ -63,7 +64,8 @@ func (a *App) Initialize() {
 }
 
 func (a *App) Run() {
-	a.Logger.Fatal(http.ListenAndServe(":8080", a.Router))
+	originsOK := handlers.AllowedOrigins([]string{"goodfred.dev", "localhost:4785"})
+	a.Logger.Fatal(http.ListenAndServe(":8080", handlers.CORS(originsOK)(a.Router)))
 }
 
 func getDBConfig() string {
