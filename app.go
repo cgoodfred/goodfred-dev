@@ -132,7 +132,7 @@ func (a *App) getSensorReadings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := sensorReading{SID: id}
+	s := sensor{SID: id}
 	readings, err := s.getLastTenReadings(a.DB)
 	if err != nil {
 		switch err {
@@ -245,8 +245,22 @@ func (a *App) getSensor(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	readings, err := s.getLastTenReadings(a.DB)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			respondWithError(w, http.StatusNotFound, fmt.Sprintf("No records found for sensor_id: %d", id))
+		default:
+			respondWithError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
 
-	respondWithJSON(w, http.StatusOK, s)
+	sens := sensorResponse{
+		Sensor:   s,
+		Readings: readings,
+	}
+	respondWithJSON(w, http.StatusOK, sens)
 }
 
 func (a *App) getSensors(w http.ResponseWriter, r *http.Request) {
