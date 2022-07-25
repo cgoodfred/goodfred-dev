@@ -64,7 +64,7 @@ func (a *App) Initialize() {
 }
 
 func (a *App) Run() {
-	originsOK := handlers.AllowedOrigins([]string{"goodfred.dev", "localhost:4785"})
+	originsOK := handlers.AllowedOrigins([]string{"goodfred.dev", "localhost:9192"})
 	a.Logger.Fatal(http.ListenAndServe(":8080", handlers.CORS(originsOK)(a.Router)))
 }
 
