@@ -87,6 +87,7 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/sensors", a.createSensor).Methods("POST")
 	a.Router.HandleFunc("/sensors", a.getSensors).Methods("GET")
 	a.Router.HandleFunc("/sensors/underweight", a.getUnderweightSensors).Methods("GET")
+	a.Router.HandleFunc("/sensors/nextID", a.getNextSensorID).Methods("GET")
 	a.Router.HandleFunc("/sensors/{id:[0-9]+}", a.getSensor).Methods("GET")
 	// a.Router.HandleFunc("/sensors/{id:[0-9]+}", a.deleteSensor).Methods("DELETE")
 	a.Router.HandleFunc("/sensors/{id:[0-9]+}", a.createSensorReading).Methods("POST")
@@ -301,4 +302,13 @@ func (a *App) getUnderweightSensors(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, underweight)
+}
+
+func (a *App) getNextSensorID(w http.ResponseWriter, r *http.Request) {
+	type nextID struct {
+		NextID int `json:"next_id"`
+	}
+	var next nextID
+	a.DB.QueryRow("Select nextval(pg_get_serial_sequence('sensor', 'sensor_id')) as new_id;").Scan(&next.NextID)
+	respondWithJSON(w, http.StatusOK, next)
 }

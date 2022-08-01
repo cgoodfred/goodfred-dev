@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -66,8 +67,12 @@ func (s *sensorReading) createReading(db *sql.DB) error {
 }
 
 func (s *sensor) createSensor(db *sql.DB) error {
-	if err := db.QueryRow("INSERT INTO sensor(sensor_name, full_weight, underweight_percent) VALUES($1, $2, $3) RETURNING sensor_id", s.SensorName, s.FullWeight, s.Underweight).Scan(&s.SID); err != nil {
-		return err
+	if s.SID != 0 {
+		if err := db.QueryRow("INSERT INTO sensor(sensor_id, sensor_name, full_weight, underweight_percent) VALUES($1, $2, $3, $4) RETURNING sensor_id", s.SID, s.SensorName, s.FullWeight, s.Underweight).Scan(&s.SID); err != nil {
+			return err
+		}
+	} else {
+		return errors.New("No sensor_provided, get an id at sensors/nextID")
 	}
 	return nil
 }
